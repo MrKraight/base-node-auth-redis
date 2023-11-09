@@ -28,6 +28,9 @@ router.post('/login', async (req, res, next) => {
             }
 
             const token = jwt.sign({ id: user.id}, jwtOptions.secretOrKey);
+            user.token = token;
+            await setUserWithJWT(user.id, user);
+
 
             delete user.passwordHash;
             return res.json({token: token});
@@ -43,13 +46,7 @@ router.post('/registrate', async (req, res, next) => {
     try {
         let {login, password} = req.body
         let passwordHash = await hashPassword(password)
-        let response = await userQueries.addUser(login, passwordHash);
-        let id = response.id;
-        let user = await userQueries.getUserById(id);
-        const token = jwt.sign({ id: user.id}, jwtOptions.secretOrKey);
-        user.token = token;
-        console.log('user',user)
-        await setUserWithJWT(user.id, user);
+        await userQueries.addUser(login, passwordHash);
 
         res.json({message: "success"});
     } catch (error) {
